@@ -14,9 +14,35 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { Candle } from "./models/candle";
 import { Cake } from "./models/cake";
 import { Table } from "./models/table";
-import { PictureFrame } from "./models/pictureFrame";
 import { Fireworks } from "./components/Fireworks";
 import { BirthdayCard } from "./components/BirthdayCard";
+import { FireworksOverlay } from "./components/FireworksOverlay";
+import { GreetingCard } from "./components/GreetingCard";
+import {
+  TYPED_LINES,
+  START_HINT,
+  START_HINT_TOUCH,
+  BLOW_HINT,
+  BLOW_HINT_TOUCH,
+  BLOW_BUTTON,
+  CARD_DELAY_MS,
+  BACKGROUND,
+  BACKGROUNDS,
+  FILM_PHOTOS,
+  RING_HINT,
+  TABLE_CARD_IMAGE,
+} from "./config";
+import { FilmRing } from "./components/FilmRing";
+import { FeaturedPhoto } from "./components/FeaturedPhoto";
+import { Balloons, Confetti, FilmCanister, FlowerVase, GiftBox } from "./components/Decorations";
+import { PhotoViewer } from "./components/PhotoViewer";
+import { PanoramaBackground } from "./components/PanoramaBackground";
+
+const bg = BACKGROUNDS[BACKGROUND];
+
+// phones / tablets: no keyboard, so hide the "press space" part of the hints
+const IS_TOUCH =
+  typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
 
 import "./App.css";
 
@@ -36,6 +62,8 @@ type AnimatedSceneProps = {
   cards: ReadonlyArray<BirthdayCardConfig>;
   activeCardId: string | null;
   onToggleCard: (id: string) => void;
+  onSelectPhoto: (index: number) => void;
+  selectedPhoto: number | null;
 };
 
 const CAKE_START_Y = 10;
@@ -56,9 +84,9 @@ const CANDLE_DROP_START =
 
 const totalAnimationTime = CANDLE_DROP_START + CANDLE_DROP_DURATION;
 
-const ORBIT_TARGET = new Vector3(0, 1, 0);
-const ORBIT_INITIAL_RADIUS = 3;
-const ORBIT_INITIAL_HEIGHT = 1;
+const ORBIT_TARGET = new Vector3(0, 0.3, 0);
+const ORBIT_INITIAL_RADIUS = 4.4;
+const ORBIT_INITIAL_HEIGHT = 1.9;
 const ORBIT_INITIAL_AZIMUTH = Math.PI / 2;
 const ORBIT_MIN_DISTANCE = 2;
 const ORBIT_MAX_DISTANCE = 8;
@@ -76,18 +104,27 @@ const BACKGROUND_FADE_START = Math.max(
   0
 );
 
-const TYPED_LINES = [
-  "> tina",
-  "...",
-  "> today is your birthday",
-  "...",
-  "> so i made you this computer program",
-  "...",
-  "٩(◕‿◕)۶ ٩(◕‿◕)۶ ٩(◕‿◕)۶"
-];
-const TYPED_CHAR_DELAY = 100;
+const TYPED_CHAR_DELAY = 140;
 const POST_TYPING_SCENE_DELAY = 1000;
 const CURSOR_BLINK_INTERVAL = 480;
+
+// the film strip arc in front of the cake (angles around the cake; π/2 faces the camera)
+const FILM_ARC_START = 0.3;
+const FILM_ARC_LENGTH = 2.15;
+const arcPoint = (r: number, theta: number): [number, number, number] => [
+  r * Math.sin(theta),
+  0,
+  r * Math.cos(theta),
+];
+
+// spots on the table kept free of confetti: [x, z, radius]
+const CONFETTI_AVOID: [number, number, number][] = [
+  [-0.15, -2.65, 0.8],
+  [-0.9, 2.2, 0.45],
+  [-1.45, 2.65, 0.35],
+  [-1.9, 1.8, 0.2],
+  [-1.2, -2.0, 0.25],
+];
 
 type BirthdayCardConfig = {
   id: string;
@@ -99,8 +136,8 @@ type BirthdayCardConfig = {
 const BIRTHDAY_CARDS: ReadonlyArray<BirthdayCardConfig> = [
   {
     id: "confetti",
-    image: "/card.png",
-    position: [1, 0.081, -2],
+    image: TABLE_CARD_IMAGE,
+    position: [-0.15, 0.081, -2.65],
     rotation: [-Math.PI / 2 , 0, Math.PI / 3],
   }
 ];
@@ -114,6 +151,8 @@ function AnimatedScene({
   cards,
   activeCardId,
   onToggleCard,
+  onSelectPhoto,
+  selectedPhoto,
 }: AnimatedSceneProps) {
   const cakeGroup = useRef<Group>(null);
   const tableGroup = useRef<Group>(null);
@@ -265,30 +304,29 @@ function AnimatedScene({
     <>
       <group ref={tableGroup}>
         <Table />
-        <PictureFrame
-          image="/frame2.jpg"
-          position={[0, 0.735, 3]}
-          rotation={[0, 5.6, 0]}
-          scale={0.75}
+        {/* an upright strip of film standing on the table in an arc in front of the cake */}
+        <FilmRing
+          photos={FILM_PHOTOS}
+          repeats={1}
+          radius={2.05}
+          photoHeight={0.46}
+          spinSpeed={0}
+          arcStart={FILM_ARC_START}
+          arcLength={FILM_ARC_LENGTH}
+          selected={selectedPhoto}
+          onSelect={onSelectPhoto}
         />
-        <PictureFrame
-          image="/frame3.jpg"
-          position={[0, 0.735, -3]}
-          rotation={[0, 4.0, 0]}
-          scale={0.75}
+        <FilmCanister position={arcPoint(2.12, FILM_ARC_START - 0.11)} />
+        <FilmCanister
+          position={arcPoint(2.12, FILM_ARC_START + FILM_ARC_LENGTH + 0.11)}
+          color="#3d4250"
+          band="#9aa3b5"
         />
-        <PictureFrame
-          image="/frame4.jpg"
-          position={[-1.5, 0.735, 2.5]}
-          rotation={[0, 5.4, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame1.jpg"
-          position={[-1.5, 0.735, -2.5]}
-          rotation={[0, 4.2, 0]}
-          scale={0.75}
-        />
+        <GiftBox position={[-0.9, 0, 2.2]} size={0.46} rotationY={0.4} />
+        <GiftBox position={[-1.45, 0, 2.65]} size={0.3} color="#8ecae6" ribbon="#ffffff" rotationY={-0.3} />
+        <Balloons position={[-1.9, 0, 1.8]} />
+        <FlowerVase position={[-1.2, 0, -2.0]} />
+        <Confetti avoid={CONFETTI_AVOID} />
         {cards.map((card) => (
           <BirthdayCard
             key={card.id}
@@ -301,7 +339,12 @@ function AnimatedScene({
           />
         ))}
       </group>
-      <group ref={cakeGroup}>
+      {/* the cake blocks taps, so a tap on it doesn't reach the film ring behind */}
+      <group
+        ref={cakeGroup}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
         <Cake />
       </group>
       <group ref={candleGroup}>
@@ -314,12 +357,16 @@ function AnimatedScene({
 function ConfiguredOrbitControls() {
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const camera = useThree((state) => state.camera);
+  const aspect = useThree((state) => state.size.width / state.size.height);
 
   useEffect(() => {
+    // on narrow (portrait phone) screens pull the camera back so the frames fit
+    const radius = clamp((ORBIT_INITIAL_RADIUS * 0.7) / aspect, ORBIT_INITIAL_RADIUS, 6);
+    const height = ORBIT_INITIAL_HEIGHT * (radius / ORBIT_INITIAL_RADIUS);
     const offset = new Vector3(
-      Math.sin(ORBIT_INITIAL_AZIMUTH) * ORBIT_INITIAL_RADIUS,
-      ORBIT_INITIAL_HEIGHT,
-      Math.cos(ORBIT_INITIAL_AZIMUTH) * ORBIT_INITIAL_RADIUS
+      Math.sin(ORBIT_INITIAL_AZIMUTH) * radius,
+      height,
+      Math.cos(ORBIT_INITIAL_AZIMUTH) * radius
     );
     const cameraPosition = ORBIT_TARGET.clone().add(offset);
     camera.position.copy(cameraPosition);
@@ -330,7 +377,8 @@ function ConfiguredOrbitControls() {
       controls.target.copy(ORBIT_TARGET);
       controls.update();
     }
-  }, [camera]);
+    // only re-frame when the screen shape really changes (e.g. phone rotated)
+  }, [camera, aspect]);
 
   return (
     <OrbitControls
@@ -378,10 +426,12 @@ export default function App() {
   const [isCandleLit, setIsCandleLit] = useState(true);
   const [fireworksActive, setFireworksActive] = useState(false);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [featuredPhoto, setFeaturedPhoto] = useState<number | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/music.mp3");
+    const audio = new Audio("./music.mp3");
     audio.loop = true;
     audio.preload = "auto";
     backgroundAudioRef.current = audio;
@@ -486,6 +536,16 @@ export default function App() {
     return () => window.clearInterval(handle);
   }, []);
 
+  const startShow = useCallback(() => {
+    playBackgroundMusic();
+    setHasStarted(true);
+  }, [playBackgroundMusic]);
+
+  const blowOutCandle = useCallback(() => {
+    setIsCandleLit(false);
+    setFireworksActive(true);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code !== "Space" && event.key !== " ") {
@@ -493,19 +553,37 @@ export default function App() {
       }
       event.preventDefault();
       if (!hasStarted) {
-        playBackgroundMusic();
-        setHasStarted(true);
+        startShow();
         return;
       }
       if (hasAnimationCompleted && isCandleLit) {
-        setIsCandleLit(false);
-        setFireworksActive(true);
+        blowOutCandle();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
+  }, [hasStarted, hasAnimationCompleted, isCandleLit, startShow, blowOutCandle]);
+
+  // tap/click anywhere to start (so it also works on phones)
+  useEffect(() => {
+    if (hasStarted) return;
+    const handlePointer = () => startShow();
+    window.addEventListener("pointerup", handlePointer);
+    return () => window.removeEventListener("pointerup", handlePointer);
+  }, [hasStarted, startShow]);
+
+  // pop the greeting card up a little after the fireworks start
+  const [isGreetingOpen, setIsGreetingOpen] = useState(false);
+  const [hasSeenGreeting, setHasSeenGreeting] = useState(false);
+  useEffect(() => {
+    if (!fireworksActive) return;
+    const handle = window.setTimeout(() => {
+      setIsGreetingOpen(true);
+      setHasSeenGreeting(true);
+    }, CARD_DELAY_MS);
+    return () => window.clearTimeout(handle);
+  }, [fireworksActive]);
 
   const handleCardToggle = useCallback((id: string) => {
     setActiveCardId((current) => (current === id ? null : id));
@@ -538,10 +616,34 @@ export default function App() {
           })}
         </div>
       </div>
+      {!hasStarted && (
+        <div className="hint-overlay">{IS_TOUCH ? START_HINT_TOUCH : START_HINT}</div>
+      )}
       {hasAnimationCompleted && isCandleLit && (
-        <div className="hint-overlay">press space to blow out the candle</div>
+        <div className="blow-controls">
+          <button className="blow-button" onClick={blowOutCandle}>
+            {BLOW_BUTTON}
+          </button>
+          <div className="blow-hint">{IS_TOUCH ? BLOW_HINT_TOUCH : BLOW_HINT}</div>
+        </div>
+      )}
+      <FireworksOverlay isActive={fireworksActive} daytime={bg.daytime} />
+      {hasAnimationCompleted && !isGreetingOpen && viewerIndex === null && featuredPhoto === null && (
+        <div className="ring-hint">{RING_HINT}</div>
+      )}
+      <PhotoViewer
+        photos={FILM_PHOTOS.map((p) => p.full)}
+        index={viewerIndex}
+        onChange={setViewerIndex}
+      />
+      <GreetingCard open={isGreetingOpen} onClose={() => setIsGreetingOpen(false)} />
+      {hasSeenGreeting && !isGreetingOpen && (
+        <button className="reopen-card" onClick={() => setIsGreetingOpen(true)}>
+          💌 打开贺卡
+        </button>
       )}
       <Canvas
+        onPointerMissed={() => setFeaturedPhoto(null)}
         gl={{ alpha: true }}
         style={{ background: "transparent" }}
         onCreated={({ gl }) => {
@@ -558,20 +660,54 @@ export default function App() {
             cards={BIRTHDAY_CARDS}
             activeCardId={activeCardId}
             onToggleCard={handleCardToggle}
+            onSelectPhoto={setFeaturedPhoto}
+            selectedPhoto={featuredPhoto}
           />
           <ambientLight intensity={(1 - environmentProgress) * 0.8} />
-          <directionalLight intensity={0.5} position={[2, 10, 0]} color={[1, 0.9, 0.95]}/>
-          <Environment
-            files={["/shanghai_bund_4k.hdr"]}
-            backgroundRotation={[0, 3.3, 0]}
-            environmentRotation={[0, 3.3, 0]}
-            background
-            environmentIntensity={0.1 * environmentProgress}
-            backgroundIntensity={0.05 * environmentProgress}
+          <directionalLight
+            intensity={bg.sunIntensity}
+            position={[2, 10, 0]}
+            color={bg.sunColor}
           />
-          <EnvironmentBackgroundController intensity={0.05 * environmentProgress} />
+          {bg.file.endsWith(".hdr") ? (
+            <>
+              <Environment
+                files={[bg.file]}
+                backgroundRotation={[0, bg.rotation, 0]}
+                environmentRotation={[0, bg.rotation, 0]}
+                background
+                environmentIntensity={bg.environmentIntensity * environmentProgress}
+                backgroundIntensity={bg.backgroundIntensity * environmentProgress}
+              />
+              <EnvironmentBackgroundController
+                intensity={bg.backgroundIntensity * environmentProgress}
+              />
+            </>
+          ) : (
+            <PanoramaBackground
+              file={bg.file}
+              fileSmall={bg.fileSmall}
+              rotation={bg.rotation}
+              progress={environmentProgress}
+              backgroundIntensity={bg.backgroundIntensity}
+              environmentIntensity={bg.environmentIntensity}
+            />
+          )}
           <Fireworks isActive={fireworksActive} origin={[0, 10, 0]} />
           <ConfiguredOrbitControls />
+        </Suspense>
+        {/* loads its full-size photo on demand without pausing the rest of the scene */}
+        <Suspense fallback={null}>
+          {featuredPhoto !== null && (
+            <FeaturedPhoto
+              src={FILM_PHOTOS[featuredPhoto].full}
+              position={[1.0, 2.0, 0]}
+              size={1.75}
+              onOpenFull={() => setViewerIndex(featuredPhoto)}
+              onClose={() => setFeaturedPhoto(null)}
+              closeLabel="收起照片"
+            />
+          )}
         </Suspense>
       </Canvas>
     </div>

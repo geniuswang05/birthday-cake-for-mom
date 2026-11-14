@@ -46,7 +46,7 @@ canvas {
 }
 
 .typed-text {
-  font-family: "Courier New", Courier, monospace;
+  font-family: "Courier New", Courier, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -69,7 +69,7 @@ canvas {
 
 .space-hint {
   margin-top: 1.5rem;
-  font-family: "Courier New", Courier, monospace;
+  font-family: "Courier New", Courier, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
   font-size: 0.85rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -78,14 +78,289 @@ canvas {
 
 .hint-overlay {
   position: absolute;
-  bottom: 2rem;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  bottom: calc(2rem + 36px); /* clear the host's badge in the bottom corner */
   left: 50%;
   transform: translateX(-50%);
-  font-family: "Courier New", Courier, monospace;
+  font-family: "Courier New", Courier, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba(255, 242, 228, 0.9);
   opacity: 0.85;
   pointer-events: none;
   z-index: 3;
+}
+
+/* ---------- 吹蜡烛按钮 ---------- */
+.blow-controls {
+  position: absolute;
+  bottom: calc(2rem + 36px); /* clear the host's badge in the bottom corner */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+
+.blow-button,
+.reopen-card {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 1.1rem;
+  padding: 0.7em 1.6em;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 220, 200, 0.6);
+  background: rgba(255, 120, 150, 0.85);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(255, 100, 140, 0.45);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.blow-hint {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-align: center;
+  padding: 0.25em 0.9em;
+  border-radius: 999px;
+  background: rgba(40, 20, 30, 0.45);
+}
+
+.reopen-card {
+  position: absolute;
+  bottom: calc(2rem + 36px); /* clear the host's badge in the bottom corner */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* ---------- 烟花 ---------- */
+.fireworks-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* ---------- 弹出贺卡 ---------- */
+.greeting-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 2, 20, 0.35);
+  animation: fade-in 0.6s ease-out;
+}
+
+.greeting-card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 2.4rem 2rem 1.8rem;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #fff8f0 0%, #ffe9ec 100%);
+  color: #5a3a3a;
+  font-family: "Songti SC", "STSong", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", serif;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 0 0 6px #fff, inset 0 0 0 7px #f4c6ce;
+  animation: card-pop 0.8s cubic-bezier(0.2, 1.3, 0.4, 1);
+  text-align: center;
+}
+
+.greeting-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #b07a7a;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.greeting-deco {
+  font-size: 2.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.greeting-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 5px solid #fff;
+  box-shadow: 0 4px 14px rgba(120, 60, 70, 0.25);
+  transform: rotate(-1.5deg);
+}
+
+.greeting-title {
+  font-size: 1.9rem;
+  color: #d0506a;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.08em;
+}
+
+.greeting-body p {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  margin-bottom: 0.6rem;
+}
+
+.greeting-sign {
+  margin-top: 1.4rem;
+  text-align: right;
+  font-size: 1.1rem;
+}
+
+.greeting-date {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes card-pop {
+  from { opacity: 0; transform: scale(0.6) rotate(-4deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* ---------- 手机竖屏 ---------- */
+.greeting-body p {
+  text-wrap: balance;
+}
+
+@media (max-width: 480px) {
+  .greeting-card {
+    padding: 2rem 1.1rem 1.4rem;
+  }
+  .greeting-title {
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+  }
+  .greeting-body p {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 0.4rem;
+  }
+}
+
+/* ---------- 点开看大图 ---------- */
+.viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 4, 10, 0.86);
+  animation: fade-in 0.25s ease-out;
+}
+
+.viewer-photo {
+  max-width: min(92vw, 1400px);
+  max-height: 82vh;
+  object-fit: contain;
+  border: 6px solid #fff;
+  border-radius: 6px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6);
+  animation: card-pop 0.35s ease-out;
+}
+
+.viewer-close,
+.viewer-nav {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.viewer-close {
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.8rem;
+  padding: 0;
+}
+
+.viewer-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  font-size: 2rem;
+  padding: 0 0 4px;
+}
+.viewer-prev { left: 12px; }
+.viewer-next { right: 12px; }
+
+.viewer-count {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
+.ring-hint {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #fff;
+  padding: 0.3em 1em;
+  border-radius: 999px;
+  background: rgba(40, 20, 30, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ---------- 蛋糕上方浮起的照片的关闭按钮 ---------- */
+.featured-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: rgba(40, 20, 30, 0.75);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0 0 2px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
 }
